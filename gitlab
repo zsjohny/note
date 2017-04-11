@@ -1,0 +1,24 @@
+http://bytefreaks.net/gnulinux/bash/gitlab-com-clone-all-repositories-in-your-account
+
+GitLab.com offers a public API that allows us to get information related to our accounts. One of the API calls available is the account projects call (http://gitlab.com/api/v3/projects).
+
+This call will return a JSON object describing the projects available to your account.
+
+To clone all of the projects available to you, you can use the following:
+
+TOKEN="PASTE_YOUR_PRIVATE_TOKEN_HERE"; PREFIX="ssh_url_to_repo"; curl --header "PRIVATE-TOKEN: $TOKEN" http://gitlab.com/api/v3/projects | grep -o "\"$PREFIX\":[^ ,]\+" | awk -F ':' '{printf "ssh://"; for (i=2; i<NF; i++) printf $i "/"; print $NF}' | xargs -L1 git clone
+
+The above code will bring the JSON object, filter out everything except for the “ssh_url_to_repo” member of each project and then it will use it to clone the project by fixing up the URL to be used by git.
+
+To get the above code working: the GitLab API requires that you use a token that is related to your account instead of using your credentials to make the call to the API.
+
+To get your private token, visit this page http://gitlab.com/profile/account , the private token is the random sequence of characters in the white box:
+
+[GitLab.com] Private TokenYou need to copy that value in the place of the variable TOKEN in the above script.
+
+In case you have a lot of projects (more than 10), the default call will only produce the results for the first 10 repositories only.
+
+To list all available repositories you have two options:
+
+ Set the per_page query parameter to a value big enough to fetch all your projects information if they are less than 100. e.g http://gitlab.com/api/v3/projects?per_page=100
+Follow the link headers from the initial response to make all the next calls.
